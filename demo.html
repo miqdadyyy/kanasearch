@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>kanasearch demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&family=Cormorant+Garamond:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f12;
+      --card: #141018;
+      --text: #f8f3ec;
+      --muted: #c9c1b6;
+      --border: #3a3130;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Cormorant Garamond", serif;
+      color: var(--text);
+      background: var(--bg);
+      background-image:
+        radial-gradient(circle at 20% 0%, rgba(255,255,255,0.04) 0 2px, transparent 2px),
+        radial-gradient(circle at 80% 0%, rgba(255,255,255,0.04) 0 2px, transparent 2px);
+      background-size: 80px 80px, 80px 80px;
+    }
+    .site {
+      max-width: 980px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    header.brand {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    h1 {
+      margin: 0;
+      font-family: "Noto Serif JP", serif;
+      font-weight: 600;
+      font-size: 28px;
+    }
+    .tag {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .panel {
+      background: rgba(20,20,24,.7);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,.4);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    label {
+      font-size: 14px;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 6px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      outline: none;
+      font-family: "Cormorant Garamond", serif;
+      font-size: 16px;
+      transition: border-color 200ms;
+    }
+    input[type="text"]:focus {
+      border-color: #d9c6b0;
+    }
+    input[type="text"]::placeholder { color: #7a6e63; }
+    .results { margin-top: 16px; }
+    .results-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .result-item {
+      padding: 14px 0;
+      border-bottom: 1px dashed #2b2623;
+      opacity: 0;
+      transform: translateY(6px);
+      animation: fadeIn 360ms ease forwards;
+    }
+    @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+    .result-header {
+      display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+    }
+    .romaji {
+      font-size: 26px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .kana {
+      display: flex; gap: 10px; align-items: baseline;
+    }
+    .kana span {
+      font-family: "Noto Serif JP", serif;
+      font-size: 22px;
+      color: #d9c6b0;
+    }
+    .score {
+      margin-left: auto;
+      font-size: 13px;
+      color: #7a6e63;
+      white-space: nowrap;
+    }
+    .kanji-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .kanji-card {
+      padding: 12px 10px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(255,255,255,.06);
+      display: flex; flex-direction: column; align-items: center;
+      gap: 6px;
+      transition: background 200ms;
+    }
+    .kanji-card:hover { background: rgba(255,255,255,0.06); }
+    .kanji-char {
+      font-family: "Noto Serif JP", serif;
+      font-size: 42px;
+      line-height: 1;
+      color: #f8e9d2;
+    }
+    .kanji-meanings {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.4;
+    }
+    .empty {
+      padding: 40px 20px;
+      text-align: center;
+      color: #7a6e63;
+      font-size: 16px;
+    }
+    @media (max-width: 700px) {
+      .grid { grid-template-columns: 1fr; }
+      .kanji-char { font-size: 36px; }
+      .romaji { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="site">
+    <header class="brand">
+      <h1>kanasearch</h1>
+      <div class="tag">romaji → kana · kanji</div>
+    </header>
+    <section class="panel">
+      <div class="grid">
+        <div>
+          <label for="q">Romaji</label>
+          <input id="q" type="text" placeholder="Type romaji… (e.g. ai, kyu, neko)" autocomplete="off" autofocus />
+        </div>
+        <div>
+          <label for="ctx">Context</label>
+          <input id="ctx" type="text" placeholder="Meaning filter… (e.g. love, water, fire)" autocomplete="off" />
+        </div>
+      </div>
+    </section>
+    <section id="out" class="results" aria-live="polite">
+      <div class="empty">Type romaji to search.</div>
+    </section>
+  </div>
+
+  <script type="module">
+    import { search } from "./dist/index.js";
+
+    const qEl = document.getElementById("q");
+    const ctxEl = document.getElementById("ctx");
+    const outEl = document.getElementById("out");
+    let tid = null;
+
+    function render(results) {
+      if (!results.length) {
+        outEl.innerHTML = '<div class="empty">No results.</div>';
+        return;
+      }
+      let h = `<div class="results-header"><span>${results.length} result${results.length === 1 ? "" : "s"}</span><span>top score ${results[0].score.toFixed(2)}</span></div>`;
+      results.forEach((r, i) => {
+        h += `<div class="result-item" style="animation-delay:${i * 30}ms"><div class="result-header"><span class="romaji">${r.romaji}</span><div class="kana">`;
+        if (r.hiragana) h += `<span>${r.hiragana}</span>`;
+        if (r.katakana) h += `<span>${r.katakana}</span>`;
+        h += `</div><span class="score">${r.score.toFixed(3)}</span></div>`;
+        if (r.kanji.length) {
+          h += '<div class="kanji-grid">';
+          r.kanji.forEach(k => {
+            h += `<div class="kanji-card"><div class="kanji-char">${k.char}</div><div class="kanji-meanings">${k.meaning.join(" · ")}</div></div>`;
+          });
+          h += '</div>';
+        }
+        h += '</div>';
+      });
+      outEl.innerHTML = h;
+    }
+
+    function run() {
+      const q = qEl.value.trim();
+      if (!q) { outEl.innerHTML = '<div class="empty">Type romaji to search.</div>'; return; }
+      render(search(q, { context: ctxEl.value.trim() || undefined, limit: 20, fuzzy: true }));
+    }
+
+    qEl.addEventListener("input", () => { clearTimeout(tid); tid = setTimeout(run, 150); });
+    ctxEl.addEventListener("input", () => { clearTimeout(tid); tid = setTimeout(run, 150); });
+  </script>
+</body>
+</html>

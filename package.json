@@ -1,0 +1,46 @@
+{
+  "name": "kanasearch",
+  "version": "0.1.0",
+  "description": "Romaji to hiragana/katakana/kanji search with fuzzy matching and context-based ranking",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build:data": "node scripts/build-data.js",
+    "build:ts": "tsup",
+    "build": "npm run build:data && npm run build:ts",
+    "test": "node --test src/__tests__/search.test.ts"
+  },
+  "keywords": [
+    "japanese",
+    "romaji",
+    "hiragana",
+    "katakana",
+    "kanji",
+    "search",
+    "fuzzy",
+    "ime",
+    "dictionary"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  }
+}
