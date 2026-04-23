@@ -1,6 +1,6 @@
 {
   "name": "kanasearch",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Romaji to hiragana/katakana/kanji search with fuzzy matching and context-based ranking",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -26,7 +26,7 @@
     "build:data": "node scripts/build-data.js",
     "build:ts": "tsup",
     "build": "npm run build:data && npm run build:ts",
-    "test": "node --test src/__tests__/search.test.ts"
+    "test": "node --import tsx --test src/__tests__/search.test.ts"
   },
   "keywords": [
     "japanese",
@@ -42,6 +42,7 @@
   "license": "MIT",
   "devDependencies": {
     "tsup": "^8.0.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.0.0"
   }
 }
