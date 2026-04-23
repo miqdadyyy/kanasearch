@@ -3,7 +3,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const dictPath = join(__dirname, "..", "..", "dicts", "romaji_kanji.json");
+const dictPath = join(__dirname, "..", "dicts", "romaji_kanji.json");
 const outPath = join(__dirname, "..", "src", "data.ts");
 
 const raw = JSON.parse(readFileSync(dictPath, "utf-8"));

@@ -1,0 +1,9 @@
+src/
+scripts/
+dicts/
+demo.html
+demo.gif
+tsconfig.json
+tsup.config.ts
+.github/
+dist/*.map

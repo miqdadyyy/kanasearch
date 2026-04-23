@@ -2,6 +2,8 @@
 
 Romaji to hiragana, katakana, and kanji search with fuzzy matching and context-based ranking. Dictionary data bundled from JMdict and KANJIDIC.
 
+![demo](./demo.gif)
+
 ## Install
 
 ```
