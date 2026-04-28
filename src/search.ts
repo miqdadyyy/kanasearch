@@ -19,19 +19,48 @@ function entryToResult(
   entry: DictEntry,
   score: number,
   context?: string,
+  is_jlpt?: boolean,
+  jlpt_level?: number,
 ): SearchResult {
   const [romaji, hiragana, katakana, kanjiRaw] = entry;
 
-  let kanji: KanjiResult[] = kanjiRaw.map(([char, meaning]) => ({
-    char,
-    meaning,
-  }));
+  let kanji: KanjiResult[] = kanjiRaw.map(
+    ([char, meaning, jlpt, grade, freq, stroke_count, kun_readings, on_readings, name_readings]) => ({
+      char,
+      meaning,
+      jlpt: jlpt ?? undefined,
+      grade: grade ?? undefined,
+      freq: freq ?? undefined,
+      stroke_count: stroke_count ?? undefined,
+      kun_readings: kun_readings?.length ? kun_readings : undefined,
+      on_readings: on_readings?.length ? on_readings : undefined,
+      name_readings: name_readings?.length ? name_readings : undefined,
+    }),
+  );
+
+  if (is_jlpt) {
+    kanji = kanji.filter((k) => k.jlpt != null);
+  }
+
+  if (jlpt_level != null) {
+    kanji = kanji.filter((k) => k.jlpt === jlpt_level);
+  }
+
+  kanji = sortByFrequency(kanji);
 
   if (context) {
     kanji = rankByContext(kanji, context);
   }
 
   return { romaji, hiragana, katakana, kanji, score };
+}
+
+function sortByFrequency(kanji: KanjiResult[]): KanjiResult[] {
+  return kanji.slice().sort((a, b) => {
+    const fa = a.freq ?? Infinity;
+    const fb = b.freq ?? Infinity;
+    return fa - fb;
+  });
 }
 
 function rankByContext(kanji: KanjiResult[], context: string): KanjiResult[] {
@@ -74,7 +103,7 @@ export function search(
   query: string,
   options: SearchOptions = {},
 ): SearchResult[] {
-  const { limit = 20, context, fuzzy = true } = options;
+  const { limit = 20, context, fuzzy = true, is_jlpt, jlpt_level } = options;
   const q = query.toLowerCase().trim();
 
   if (!q) return [];
@@ -86,7 +115,7 @@ export function search(
   for (let i = startIdx; i < keys.length && keys[i].startsWith(q); i++) {
     const entry = dict[i];
     const score = entry[0] === q ? EXACT_THRESHOLD : PREFIX_THRESHOLD;
-    results.push(entryToResult(entry, score, context));
+    results.push(entryToResult(entry, score, context, is_jlpt, jlpt_level));
   }
 
   if (fuzzy && results.length < limit) {
@@ -102,7 +131,7 @@ export function search(
       const score = fuzzyScore(q, key);
       if (score >= FUZZY_MIN_THRESHOLD) {
         seen.add(key);
-        results.push(entryToResult(dict[i], score, context));
+        results.push(entryToResult(dict[i], score, context, is_jlpt, jlpt_level));
       }
     }
   }

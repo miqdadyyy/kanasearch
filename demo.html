@@ -81,6 +81,43 @@
       border-color: #d9c6b0;
     }
     input[type="text"]::placeholder { color: #7a6e63; }
+    select {
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      outline: none;
+      font-family: "Cormorant Garamond", serif;
+      font-size: 16px;
+      transition: border-color 200ms;
+      appearance: none;
+      cursor: pointer;
+    }
+    select:focus { border-color: #d9c6b0; }
+    select option { background: #1a1a1f; color: var(--text); }
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 12px;
+    }
+    .checkbox-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--muted);
+      user-select: none;
+    }
+    .checkbox-wrap input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #c4b5fd;
+      cursor: pointer;
+    }
     .results { margin-top: 16px; }
     .results-header {
       display: flex; justify-content: space-between; align-items: center;
@@ -146,6 +183,30 @@
       text-align: center;
       line-height: 1.4;
     }
+    .kanji-meta {
+      display: flex; flex-wrap: wrap; gap: 4px; justify-content: center;
+      margin-top: 2px;
+    }
+    .kanji-badge {
+      font-size: 10px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.06);
+      color: #a89a8e;
+      white-space: nowrap;
+    }
+    .kanji-badge.jlpt { background: rgba(139,92,246,0.15); color: #c4b5fd; }
+    .kanji-badge.grade { background: rgba(59,130,246,0.15); color: #93c5fd; }
+    .kanji-badge.freq { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+    .kanji-badge.strokes { background: rgba(245,158,11,0.15); color: #fcd34d; }
+    .kanji-readings {
+      font-size: 11px;
+      color: #7a6e63;
+      text-align: center;
+      line-height: 1.4;
+      margin-top: 2px;
+    }
+    .kanji-readings span { color: #a89a8e; }
     .empty {
       padding: 40px 20px;
       text-align: center;
@@ -176,6 +237,23 @@
           <input id="ctx" type="text" placeholder="Meaning filter… (e.g. love, water, fire)" autocomplete="off" />
         </div>
       </div>
+      <div class="filter-row">
+        <label class="checkbox-wrap">
+          <input id="jlpt-only" type="checkbox" />
+          JLPT Only
+        </label>
+        <div style="flex:1;max-width:200px">
+          <label for="jlpt-level">JLPT Level</label>
+          <select id="jlpt-level">
+            <option value="">Any</option>
+            <option value="1">N1</option>
+            <option value="2">N2</option>
+            <option value="3">N3</option>
+            <option value="4">N4</option>
+            <option value="5">N5</option>
+          </select>
+        </div>
+      </div>
     </section>
     <section id="out" class="results" aria-live="polite">
       <div class="empty">Type romaji to search.</div>
@@ -187,6 +265,8 @@
 
     const qEl = document.getElementById("q");
     const ctxEl = document.getElementById("ctx");
+    const jlptOnlyEl = document.getElementById("jlpt-only");
+    const jlptLevelEl = document.getElementById("jlpt-level");
     const outEl = document.getElementById("out");
     let tid = null;
 
@@ -204,7 +284,24 @@
         if (r.kanji.length) {
           h += '<div class="kanji-grid">';
           r.kanji.forEach(k => {
-            h += `<div class="kanji-card"><div class="kanji-char">${k.char}</div><div class="kanji-meanings">${k.meaning.join(" · ")}</div></div>`;
+            h += `<div class="kanji-card"><div class="kanji-char">${k.char}</div><div class="kanji-meanings">${k.meaning.join(" · ")}</div>`;
+            const hasMeta = k.jlpt || k.grade || k.freq || k.stroke_count;
+            if (hasMeta) {
+              h += '<div class="kanji-meta">';
+              if (k.jlpt) h += `<span class="kanji-badge jlpt">N${k.jlpt}</span>`;
+              if (k.grade) h += `<span class="kanji-badge grade">G${k.grade}</span>`;
+              if (k.freq) h += `<span class="kanji-badge freq">#${k.freq}</span>`;
+              if (k.stroke_count) h += `<span class="kanji-badge strokes">${k.stroke_count}画</span>`;
+              h += '</div>';
+            }
+            if (k.on_readings?.length || k.kun_readings?.length) {
+              h += '<div class="kanji-readings">';
+              if (k.on_readings?.length) h += `<span>ON</span> ${k.on_readings.join(", ")}`;
+              if (k.on_readings?.length && k.kun_readings?.length) h += ' · ';
+              if (k.kun_readings?.length) h += `<span>KUN</span> ${k.kun_readings.join(", ")}`;
+              h += '</div>';
+            }
+            h += '</div>';
           });
           h += '</div>';
         }
@@ -216,11 +313,20 @@
     function run() {
       const q = qEl.value.trim();
       if (!q) { outEl.innerHTML = '<div class="empty">Type romaji to search.</div>'; return; }
-      render(search(q, { context: ctxEl.value.trim() || undefined, limit: 20, fuzzy: true }));
+      const opts = {
+        context: ctxEl.value.trim() || undefined,
+        limit: 20,
+        fuzzy: true,
+        is_jlpt: jlptOnlyEl.checked || undefined,
+        jlpt_level: jlptLevelEl.value ? Number(jlptLevelEl.value) : undefined,
+      };
+      render(search(q, opts));
     }
 
     qEl.addEventListener("input", () => { clearTimeout(tid); tid = setTimeout(run, 150); });
     ctxEl.addEventListener("input", () => { clearTimeout(tid); tid = setTimeout(run, 150); });
+    jlptOnlyEl.addEventListener("change", run);
+    jlptLevelEl.addEventListener("change", run);
   </script>
 </body>
 </html>
